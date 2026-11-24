@@ -6,10 +6,14 @@
   "license": "MIT",
   "author": "Febrinanda and CoreBlow contributors",
   "type": "module",
+  "main": "src/runner.mjs",
+  "bin": {
+    "corebench": "bin/corebench.mjs"
+  },
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
-    "test": "node test/score.test.mjs"
+    "test": "node test/score.test.mjs && node test/runner.test.mjs"
   }
 }

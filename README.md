@@ -1,46 +1,59 @@
 # CoreBench
 
-CoreBlow full-stack benchmark harness and reports.
+Full-stack benchmark harness, throughput profiler, and latency regression suite for the CoreBlow Gateway.
 
 ## Overview
 
-CoreBench is part of the CoreBlow public repository family. Benchmark harness for measuring CoreBlow behavior across releases.
+CoreBench is part of the CoreBlow public repository family. It provides automated benchmarking tools to measure CoreBlow Gateway performance, response latency percentiles (p50/p95/p99), concurrency scaling, error rates, and composite quality scores across versions.
 
 This repository follows the same ecosystem split that CoreBlow uses to keep release surfaces small, auditable, and independently governed.
 
 ## Repository Role
 
+- Status: Active
 - Phase: 3
 - Priority: quality
 - Kind: benchmark
 - Family: CoreBlow public repository family
 - Branding: CoreBlow
 
-## Scope
+## Features
 
-- Score calculation contracts.
-- Benchmark input and output conventions.
-- Regression-friendly quality measurements.
+- **Concurrent Turn Runner**: Asynchronous worker pool executing configurable turn workloads against live Gateway endpoints.
+- **Percentile Tracking**: Sub-millisecond high-resolution timing measuring min, avg, p50, p95, p99, and max response latencies.
+- **Composite Scoring**: Balanced evaluation of correctness (1 - error rate), reliability, and response latency.
+- **Multi-Format Output**: Human-readable console summaries, structured JSON for CI automation, and formatted Markdown tables.
 
-## Out of Scope
+## Usage
 
-- Synthetic marketing numbers.
-- Production telemetry storage.
+### Command Line Interface
 
-## Key Files
+```sh
+# Benchmark local gateway with 50 turns and concurrency 5
+node bin/corebench.mjs --endpoint http://127.0.0.1:18789/health --turns 50 --concurrency 5
 
-- `.gitignore`
-- `package.json`
-- `src/score.mjs`
-- `test/score.test.mjs`
-- `.github/CODEOWNERS`
-- `.github/dependabot.yml`
-- `.github/ISSUE_TEMPLATE/bug_report.yml`
-- `.github/ISSUE_TEMPLATE/config.yml`
+# Output structured JSON report
+node bin/corebench.mjs --endpoint http://127.0.0.1:18789/health --json
 
-## Development
+# Generate Markdown table for PR comments or releases
+node bin/corebench.mjs --endpoint http://127.0.0.1:18789/health --markdown
+```
 
-### Test
+### Programmatic Usage
+
+```js
+import { runBenchmark, formatMarkdownReport } from "@coreblow/corebench";
+
+const report = await runBenchmark({
+  endpoint: "http://127.0.0.1:18789/health",
+  concurrency: 4,
+  turns: 20,
+});
+
+console.log(`p95 Latency: ${report.latency.p95Ms}ms | Score: ${report.compositeScore}`);
+```
+
+### Running Tests
 
 ```sh
 npm test
