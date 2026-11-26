@@ -16,7 +16,9 @@ const samples = parseInt(getArg("--samples", "5"), 10);
 const isJson = args.includes("--json");
 const isMarkdown = args.includes("--markdown");
 
-console.log(`Profiling CoreBlow Streaming TTFT & RTT against ${url} (${samples} samples)...`);
+if (!isJson) {
+  console.log(`Profiling CoreBlow Streaming TTFT & RTT against ${url} (${samples} samples)...`);
+}
 
 const report = await profileStreamingSession({
   url,

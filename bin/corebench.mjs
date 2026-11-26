@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
+import { compareReports } from "../src/compare.mjs";
 import { formatMarkdownReport, runBenchmark } from "../src/runner.mjs";
 import { formatRttMarkdownReport, profileStreamingSession } from "../src/profiler.mjs";
 
 const rawArgs = process.argv.slice(2);
-const isRttSubcommand = rawArgs[0] === "rtt";
-const args = isRttSubcommand ? rawArgs.slice(1) : rawArgs;
+const subcommand = ["rtt", "compare", "run"].includes(rawArgs[0]) ? rawArgs[0] : "run";
+const args = ["rtt", "compare", "run"].includes(rawArgs[0]) ? rawArgs.slice(1) : rawArgs;
 
 function getArg(flag, fallback) {
   const idx = args.indexOf(flag);
@@ -16,12 +18,27 @@ function getArg(flag, fallback) {
 const isJson = args.includes("--json");
 const isMarkdown = args.includes("--markdown");
 
-if (isRttSubcommand) {
+if (subcommand === "compare") {
+  const baselinePath = getArg("--baseline", "");
+  const currentPath = getArg("--current", "");
+  if (!baselinePath || !currentPath) {
+    console.error("compare requires --baseline <file> and --current <file>");
+    process.exit(1);
+  }
+  const maxRegressionPct = parseFloat(getArg("--max-regression-pct", "15"));
+  const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
+  const current = JSON.parse(fs.readFileSync(currentPath, "utf8"));
+  const result = compareReports(baseline, current, { maxRegressionPct });
+  console.log(JSON.stringify(result, null, 2));
+  process.exit(result.ok ? 0 : 1);
+} else if (subcommand === "rtt") {
   const url = getArg("--url", process.env.COREBLOW_STREAM_URL || "http://127.0.0.1:18789/api/chat/stream");
   const token = getArg("--token", process.env.COREBLOW_TOKEN || "");
   const samples = parseInt(getArg("--samples", "5"), 10);
 
-  console.log(`Profiling CoreBlow Streaming TTFT & RTT against ${url} (${samples} samples)...`);
+  if (!isJson) {
+    console.log(`Profiling CoreBlow Streaming TTFT & RTT against ${url} (${samples} samples)...`);
+  }
 
   const report = await profileStreamingSession({
     url,
@@ -45,7 +62,9 @@ if (isRttSubcommand) {
   const concurrency = parseInt(getArg("--concurrency", "4"), 10);
   const turns = parseInt(getArg("--turns", "20"), 10);
 
-  console.log(`Running CoreBlow benchmark against ${endpoint} (turns: ${turns}, concurrency: ${concurrency})...`);
+  if (!isJson) {
+    console.log(`Running CoreBlow benchmark against ${endpoint} (turns: ${turns}, concurrency: ${concurrency})...`);
+  }
 
   const report = await runBenchmark({
     endpoint,

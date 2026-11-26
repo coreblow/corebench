@@ -1,7 +1,8 @@
 import { performance } from "node:perf_hooks";
+import { compareReports } from "./compare.mjs";
 import { scoreRun } from "./score.mjs";
 
-export { scoreRun };
+export { compareReports, scoreRun };
 
 export async function runBenchmark(options = {}) {
   const {
