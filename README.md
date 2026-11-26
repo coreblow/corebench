@@ -37,6 +37,9 @@ node bin/corebench.mjs --endpoint http://127.0.0.1:18789/health --json
 
 # Generate Markdown table for PR comments or releases
 node bin/corebench.mjs --endpoint http://127.0.0.1:18789/health --markdown
+
+# Run streaming TTFT & RTT profiler (consolidated from coreblow-rtt)
+node bin/corebench.mjs rtt --url http://127.0.0.1:18789/api/chat/stream --samples 5 --markdown
 ```
 
 ### Programmatic Usage
