@@ -44,6 +44,10 @@ node bin/coreblow-rtt.mjs --url http://127.0.0.1:18789/api/chat/stream --samples
 
 # Compare baseline vs current JSON report with regression threshold (exits non-zero on regression)
 node bin/corebench.mjs compare --baseline baseline.json --current current.json --max-regression-pct 15
+
+# Run behavioral agent evaluation suite (32 scenarios across 4 categories)
+node bin/corebench.mjs eval --self-check --json
+node bin/corebench.mjs eval --target http://127.0.0.1:18789/api/eval --min-pass-rate 80 --json
 ```
 
 ### Programmatic Usage

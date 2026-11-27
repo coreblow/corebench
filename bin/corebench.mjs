@@ -2,12 +2,14 @@
 
 import fs from "node:fs";
 import { compareReports } from "../src/compare.mjs";
+import { formatEvalMarkdownReport, runEvalSuite } from "../src/eval.mjs";
 import { formatMarkdownReport, runBenchmark } from "../src/runner.mjs";
 import { formatRttMarkdownReport, profileStreamingSession } from "../src/profiler.mjs";
 
 const rawArgs = process.argv.slice(2);
-const subcommand = ["rtt", "compare", "run"].includes(rawArgs[0]) ? rawArgs[0] : "run";
-const args = ["rtt", "compare", "run"].includes(rawArgs[0]) ? rawArgs.slice(1) : rawArgs;
+const SUBCOMMANDS = ["rtt", "compare", "run", "eval"];
+const subcommand = SUBCOMMANDS.includes(rawArgs[0]) ? rawArgs[0] : "run";
+const args = SUBCOMMANDS.includes(rawArgs[0]) ? rawArgs.slice(1) : rawArgs;
 
 function getArg(flag, fallback) {
   const idx = args.indexOf(flag);
@@ -18,7 +20,40 @@ function getArg(flag, fallback) {
 const isJson = args.includes("--json");
 const isMarkdown = args.includes("--markdown");
 
-if (subcommand === "compare") {
+if (subcommand === "eval") {
+  const suitePath = getArg("--suite", "");
+  const targetUrl = getArg("--target", "");
+  const responsesPath = getArg("--responses", "");
+  const selfCheck = args.includes("--self-check");
+  const category = getArg("--category", "");
+  const minPassRate = parseFloat(getArg("--min-pass-rate", "80"));
+  const token = getArg("--token", process.env.COREBLOW_TOKEN || "");
+
+  const report = await runEvalSuite({
+    ...(suitePath ? { suitePath } : {}),
+    targetUrl,
+    responsesPath,
+    selfCheck,
+    category,
+    minPassRate,
+    token,
+  });
+
+  if (isJson) {
+    console.log(JSON.stringify(report, null, 2));
+  } else if (isMarkdown) {
+    console.log(formatEvalMarkdownReport(report));
+  } else {
+    console.log("\n=== CoreBench Behavioral Eval Summary ===");
+    console.log(`Suite: ${report.suite} (mode: ${report.mode})`);
+    console.log(`Overall: ${report.overall.passed}/${report.overall.total} (${report.overall.passRate}%) | Threshold: ${report.minPassRate}% | ${report.ok ? "PASS" : "FAIL"}`);
+    for (const [cat, stats] of Object.entries(report.categories)) {
+      console.log(`  - ${cat}: ${stats.passed}/${stats.total} (${stats.passRate}%)`);
+    }
+    console.log(`Latency: p50=${report.latency.p50Ms}ms | p95=${report.latency.p95Ms}ms | max=${report.latency.maxMs}ms`);
+  }
+  process.exit(report.ok ? 0 : 1);
+} else if (subcommand === "compare") {
   const baselinePath = getArg("--baseline", "");
   const currentPath = getArg("--current", "");
   if (!baselinePath || !currentPath) {
