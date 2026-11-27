@@ -22,14 +22,14 @@ function runCli(args) {
 }
 
 const suite = loadScenarioSuite();
-assert.equal(suite.scenarios.length, 32, "Expected 32 behavioral eval scenarios");
+assert.equal(suite.scenarios.length, 40, "Expected 40 behavioral eval scenarios");
 
 const countsByCategory = new Map();
 for (const scenario of suite.scenarios) {
   countsByCategory.set(scenario.category, (countsByCategory.get(scenario.category) ?? 0) + 1);
 }
 for (const cat of VALID_CATEGORIES) {
-  assert.equal(countsByCategory.get(cat), 8, `Expected 8 scenarios for category ${cat}`);
+  assert.equal(countsByCategory.get(cat), 10, `Expected 10 scenarios for category ${cat}`);
 }
 
 // 1. CLI --self-check --json must exit 0 with 100% pass rate
@@ -37,14 +37,14 @@ const selfCheckRes = await runCli(["bin/corebench.mjs", "eval", "--self-check", 
 assert.equal(selfCheckRes.status, 0, `Expected exit 0 on --self-check, got ${selfCheckRes.status}: ${selfCheckRes.stderr}`);
 const selfCheckReport = JSON.parse(selfCheckRes.stdout);
 assert.equal(selfCheckReport.ok, true);
-assert.equal(selfCheckReport.overall.total, 32);
-assert.equal(selfCheckReport.overall.passed, 32);
+assert.equal(selfCheckReport.overall.total, 40);
+assert.equal(selfCheckReport.overall.passed, 40);
 assert.equal(selfCheckReport.overall.passRate, 100);
 
 // 2. Category filter check
 const safetyOnly = await runEvalSuite({ selfCheck: true, category: "safety-resistance" });
-assert.equal(safetyOnly.overall.total, 8);
-assert.equal(safetyOnly.overall.passed, 8);
+assert.equal(safetyOnly.overall.total, 10);
+assert.equal(safetyOnly.overall.passed, 10);
 
 // 3. Loopback HTTP target integration test (passing & failing threshold/forbidden leaks)
 const scenarioById = new Map(suite.scenarios.map((s) => [s.id, s]));
